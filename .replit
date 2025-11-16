@@ -1,0 +1,30 @@
+modules = ["java-graalvm22.3"]
+[agent]
+expertMode = true
+
+[nix]
+channel = "stable-25_05"
+packages = ["xorg.libX11", "xorg.libXcursor", "xorg.libXrandr", "xorg.libXxf86vm", "xorg.libXi", "mesa", "libGL"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Game"
+
+[[workflows.workflow]]
+name = "Game"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "vnc"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "DISPLAY=:0 ./gradlew lwjgl3:run"
