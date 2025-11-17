@@ -36,179 +36,150 @@ public class SistemaDeJuego {
     private final float PROB_BALON_DIFICIL = 0.25f;
     private final float PROB_BALON_ZIGZAG = 0.30f;
 
-    private final float MARGEN_LATERAL = 100f;
-    private final float ANCHO_PANTALLA = 800f;
+    private final float MARGEN = 100f;
+    private final float ANCHO = 800f;
 
-    private Texture balonNormal;
-    private Texture balonDificil;
-    private Texture premioVida;
-    private Texture premioPuntos;
+    private Texture textBalonNormal;
+    private Texture textBalonDificil;
+    private Texture textPremioVida;
+    private Texture textPremioPuntos;
     private Sound sonidoGol;
     private Sound sonidoPremio;
-    private Music musicaFondo;
+    private Music musica;
 
     private FabricaObjetosJuego fabrica;
 
-    public SistemaDeJuego(Texture balonNormal, Texture balonDificil,
-                          Texture premioVida, Texture premioPuntos,
-                          Sound golSound, Sound premioSound,
-                          Music musica) {
-        this.balonNormal = balonNormal;
-        this.balonDificil = balonDificil;
-        this.premioVida = premioVida;
-        this.premioPuntos = premioPuntos;
-        this.sonidoGol = golSound;
-        this.sonidoPremio = premioSound;
-        this.musicaFondo = musica;
-        this.fabrica = new FabricaObjetosJuegoBasica();
+    public SistemaDeJuego(Texture bn, Texture bd, Texture pv, Texture pp,
+                          Sound sg, Sound sp, Music mu) {
+        textBalonNormal = bn;
+        textBalonDificil = bd;
+        textPremioVida = pv;
+        textPremioPuntos = pp;
+        sonidoGol = sg;
+        sonidoPremio = sp;
+        musica = mu;
+        fabrica = new FabricaObjetosJuegoBasica();
     }
 
     public void crear() {
         objetos = new Array<>();
         posiciones = new Array<>();
-
         tiempoInicioJuego = TimeUtils.nanoTime();
-
         crearObjeto();
-        musicaFondo.setLooping(true);
-        musicaFondo.setVolume(0.4f);
-        musicaFondo.play();
+        musica.setLooping(true);
+        musica.setVolume(0.4f);
+        musica.play();
     }
 
-    private void reproducirSonidoGol() {
+    private void reproducirGol() {
         if (idSonidoGolActual != 0) sonidoGol.stop(idSonidoGolActual);
         idSonidoGolActual = sonidoGol.play(0.85f);
     }
 
-    private void reproducirSonidoPremio() {
+    private void reproducirPremio() {
         if (idSonidoPremioActual != 0) sonidoPremio.stop(idSonidoPremioActual);
         idSonidoPremioActual = sonidoPremio.play(0.95f);
     }
 
     private void crearObjeto() {
-        Rectangle posicion = new Rectangle();
-        posicion.width = 64f;
-        posicion.height = 64f;
-        posicion.x = MathUtils.random(MARGEN_LATERAL, ANCHO_PANTALLA - posicion.width - MARGEN_LATERAL);
-        posicion.y = 480f;
-        posiciones.add(posicion);
+        Rectangle pos = new Rectangle();
+        pos.width = 64;
+        pos.height = 64;
+        pos.x = MathUtils.random(MARGEN, ANCHO - pos.width - MARGEN);
+        pos.y = 480;
+        posiciones.add(pos);
 
-        float tiempoTranscurrido = (TimeUtils.nanoTime() - tiempoInicioJuego) / 1_000_000_000f;
-        float velocidadAumentada = VELOCIDAD_BASE + tiempoTranscurrido * INCREMENTO_POR_SEGUNDO;
-        float velocidadBaseActual = Math.min(velocidadAumentada, VELOCIDAD_MAXIMA);
-        float velocidadFinal;
+        float t = (TimeUtils.nanoTime() - tiempoInicioJuego) / 1_000_000_000f;
+        float vel = Math.min(VELOCIDAD_BASE + t * INCREMENTO_POR_SEGUNDO, VELOCIDAD_MAXIMA);
 
-        float aumentoPremio = tiempoTranscurrido * AUMENTO_PROB_PREMIO_POR_SEGUNDO;
-        float probTotalPremios = Math.min(PROB_PREMIO_BASE + aumentoPremio, MAX_PROB_PREMIO);
+        float probPremio = Math.min(PROB_PREMIO_BASE + t * AUMENTO_PROB_PREMIO_POR_SEGUNDO, MAX_PROB_PREMIO);
+        float r = MathUtils.random(0, 100);
 
-        float randomRange = MathUtils.random(0f, 100f);
-        Colisionable objeto;
+        Colisionable obj;
+        float velFinal;
 
-        final float MULTIPLICADOR_ESPECIAL = 1.2f;
-
-        if (randomRange <= probTotalPremios) {
-            float probVida = probTotalPremios / 2f;
-            velocidadFinal = velocidadBaseActual * 0.7f;
-
-            if (randomRange <= probVida) {
-                objeto = fabrica.crearPremioVida(premioVida, sonidoPremio, velocidadFinal);
+        if (r <= probPremio) {
+            velFinal = vel * 0.7f;
+            if (r <= probPremio / 2f) {
+                obj = fabrica.crearPremioVida(textPremioVida, sonidoPremio, velFinal);
             } else {
-                objeto = fabrica.crearPremioPuntos(premioPuntos, sonidoPremio, velocidadFinal);
+                obj = fabrica.crearPremioPuntos(textPremioPuntos, sonidoPremio, velFinal);
             }
         } else {
-            float probBalon = 100f - probTotalPremios;
+            float probBalones = 100 - probPremio;
+            float limNormal = probBalones * PROB_BALON_NORMAL;
+            float limDificil = limNormal + probBalones * PROB_BALON_DIFICIL;
+            float rb = MathUtils.random(0, probBalones);
 
-            float acumuladoNormal = probBalon * PROB_BALON_NORMAL;
-            float acumuladoDificil = acumuladoNormal + probBalon * PROB_BALON_DIFICIL;
-
-            float balonRange = MathUtils.random(0f, probBalon);
-
-            if (balonRange <= acumuladoNormal) {
-                velocidadFinal = velocidadBaseActual;
-                objeto = fabrica.crearBalonNormal(balonNormal, velocidadFinal);
-            } else if (balonRange <= acumuladoDificil) {
-                velocidadFinal = velocidadBaseActual * 1.5f;
-                objeto = fabrica.crearBalonDificil(balonDificil, velocidadFinal);
+            if (rb <= limNormal) {
+                velFinal = vel;
+                obj = fabrica.crearBalonNormal(textBalonNormal, velFinal);
+            } else if (rb <= limDificil) {
+                velFinal = vel * 1.5f;
+                obj = fabrica.crearBalonDificil(textBalonDificil, velFinal);
             } else {
-                velocidadFinal = velocidadBaseActual * MULTIPLICADOR_ESPECIAL;
-                objeto = fabrica.crearBalonZigZag(balonNormal, velocidadFinal);
+                velFinal = vel * 1.2f;
+                obj = fabrica.crearBalonZigZag(textBalonNormal, velFinal);
             }
         }
 
-        ((EntidadMovil) objeto).crear(posicion.x, posicion.y, posicion.width, posicion.height);
-        objetos.add(objeto);
+        ((EntidadMovil)obj).crear(pos.x, pos.y, pos.width, pos.height);
+        objetos.add(obj);
         ultimoTiempoCreacion = TimeUtils.nanoTime();
     }
 
-    public boolean actualizarMovimiento(ArqueroClaudioBravo arquero) {
-        float tiempoTranscurrido = (TimeUtils.nanoTime() - tiempoInicioJuego) / 1_000_000_000f;
+    public boolean actualizarMovimiento(ArqueroClaudioBravo arq) {
+        float t = (TimeUtils.nanoTime() - tiempoInicioJuego) / 1_000_000_000f;
+        float tc = Math.max(TIEMPO_BASE_CREACION - t * DECREMENTO_POR_SEGUNDO, TIEMPO_MINIMO_CREACION);
+        long tcNanos = (long)(tc * 1_000_000_000L);
 
-        float tiempoEntreCreacionAumentado = TIEMPO_BASE_CREACION - tiempoTranscurrido * DECREMENTO_POR_SEGUNDO;
-        float tiempoEntreCreacion = Math.max(tiempoEntreCreacionAumentado, TIEMPO_MINIMO_CREACION);
-        long tiempoEntreCreacionNanos = (long) (tiempoEntreCreacion * 1_000_000_000L);
-
-        if (TimeUtils.nanoTime() - ultimoTiempoCreacion > tiempoEntreCreacionNanos) {
+        if (TimeUtils.nanoTime() - ultimoTiempoCreacion > tcNanos) {
             crearObjeto();
         }
 
         for (int i = objetos.size - 1; i >= 0; i--) {
-            Colisionable objeto = objetos.get(i);
-            EntidadMovil entidad = (EntidadMovil) objeto;
+            Colisionable obj = objetos.get(i);
+            EntidadMovil ent = (EntidadMovil)obj;
+            ent.mover(Gdx.graphics.getDeltaTime());
 
-            entidad.mover(Gdx.graphics.getDeltaTime());
-
-            if (entidad.getArea().y + 64f < 0f) {
-                if (objeto instanceof Balon) {
-                    arquero.registrarGol();
-                    reproducirSonidoGol();
+            if (ent.getArea().y + 64 < 0) {
+                if (obj instanceof Balon) {
+                    arq.registrarGol();
+                    reproducirGol();
                 }
                 objetos.removeIndex(i);
                 posiciones.removeIndex(i);
-                if (arquero.getVidas() <= 0) return false;
+                if (arq.getVidas() <= 0) return false;
                 continue;
             }
 
-            if (entidad.getArea().overlaps(arquero.getHitbox())) {
-                objeto.alColisionar(arquero, entidad.getArea(), arquero.getHitbox());
-                if (objeto instanceof Premio) reproducirSonidoPremio();
-
+            if (ent.getArea().overlaps(arq.getHitbox())) {
+                obj.alColisionar(arq, ent.getArea(), arq.getHitbox());
+                if (obj instanceof Premio) reproducirPremio();
                 objetos.removeIndex(i);
                 posiciones.removeIndex(i);
-                if (arquero.getVidas() <= 0) return false;
+                if (arq.getVidas() <= 0) return false;
             }
         }
 
-        return arquero.getVidas() > 0;
+        return arq.getVidas() > 0;
     }
 
     public void actualizarDibujo(SpriteBatch batch) {
-        for (Colisionable objeto : objetos) {
-            ((EntidadMovil) objeto).dibujar(batch);
-        }
+        for (Colisionable o : objetos) ((EntidadMovil)o).dibujar(batch);
     }
 
     public void destruir() {
-        for (Colisionable objeto : objetos) {
-            ((EntidadMovil) objeto).dispose();
-        }
-        objetos.clear();
-        posiciones.clear();
-
-        balonNormal.dispose();
-        balonDificil.dispose();
-        premioVida.dispose();
-        premioPuntos.dispose();
-
+        for (Colisionable o : objetos) ((EntidadMovil)o).dispose();
+        textBalonNormal.dispose();
+        textBalonDificil.dispose();
+        textPremioVida.dispose();
+        textPremioPuntos.dispose();
         sonidoGol.dispose();
         sonidoPremio.dispose();
-        musicaFondo.dispose();
+        musica.dispose();
     }
 
-    public void pausar() {
-        musicaFondo.stop();
-    }
-
-    public void continuar() {
-        musicaFondo.play();
-    }
+    public void pausar() { musica.stop(); }
+    public void continuar() { musica.play(); }
 }

@@ -19,11 +19,16 @@ public class Balon extends EntidadMovil implements Colisionable {
         area.y -= velocidad * delta;
     }
 
+
+
+
+    
     @Override
     public void alColisionar(ArqueroClaudioBravo arquero, Rectangle ballArea, Rectangle arqueroHitbox) {
         estrategia.alColisionar(arquero, ballArea, arqueroHitbox);
     }
 
+    // Getter para el tipo
     @Override
     public int getTipo() {
         return tipo;

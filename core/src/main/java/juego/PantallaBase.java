@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+
+//porfavor no tocar esta clase para que no se rompa el juego
 public abstract class PantallaBase implements Screen {
 
     protected final GameMenu game;
