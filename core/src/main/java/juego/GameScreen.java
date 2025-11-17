@@ -11,7 +11,7 @@ public class GameScreen extends PantallaBase {
     private ArqueroClaudioBravo arquero;
     private SistemaDeJuego sistema;
 
-    public GameScreen(final GameMenu game) {
+    public GameScreen(GameMenu game) {
         super(game);
 
         Sound golSound = Gdx.audio.newSound(Gdx.files.internal("gol.wav"));
@@ -33,25 +33,8 @@ public class GameScreen extends PantallaBase {
                 golSound, premioSound, musicaFondo
         );
 
-        float anchoArquero = 233f;
-        float altoArquero = 113f;
-        arquero.crear(400f - (anchoArquero / 2f), 20f, anchoArquero, altoArquero);
+        arquero.crear(400 - 233/2f, 20, 233, 113);
         sistema.crear();
-    }
-
-    @Override
-    protected float getColorR() {
-        return 0.2f;
-    }
-
-    @Override
-    protected float getColorG() {
-        return 0.5f;
-    }
-
-    @Override
-    protected float getColorB() {
-        return 0.2f;
     }
 
     @Override
@@ -76,7 +59,8 @@ public class GameScreen extends PantallaBase {
 
     @Override
     protected void manejarInput(float delta) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || Gdx.input.isKeyJustPressed(Input.Keys.P)) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) ||
+            Gdx.input.isKeyJustPressed(Input.Keys.P)) {
             pause();
         }
     }

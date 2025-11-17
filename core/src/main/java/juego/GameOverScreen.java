@@ -4,14 +4,14 @@ import com.badlogic.gdx.Gdx;
 
 public class GameOverScreen extends PantallaBase {
 
-    public GameOverScreen(final GameMenu game) {
+    public GameOverScreen(GameMenu game) {
         super(game);
     }
 
     @Override
     protected void dibujarContenido(float delta) {
         font.draw(batch, "GAME OVER", 100, 200);
-        font.draw(batch, "Toca en cualquier lado para reiniciar", 100, 100);
+        font.draw(batch, "Toca para reiniciar", 100, 100);
     }
 
     @Override

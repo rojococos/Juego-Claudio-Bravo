@@ -6,28 +6,18 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class GameMenu extends Game {
 
-    private static GameMenu instance;
-
     private SpriteBatch batch;
     private BitmapFont font;
     private int higherScore;
 
-    public GameMenu() {
-        instance = this;
-    }
-
-    public static GameMenu getInstance() {
-        return instance;
-    }
-
     public void create() {
         batch = new SpriteBatch();
-        font = new BitmapFont();
+        font = new BitmapFont(); // use libGDX's default Arial font
         this.setScreen(new MainMenuScreen(this));
     }
 
     public void render() {
-        super.render();
+        super.render(); // important!
     }
 
     public void dispose() {
