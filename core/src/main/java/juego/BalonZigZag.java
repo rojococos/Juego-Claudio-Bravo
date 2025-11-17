@@ -11,25 +11,24 @@ public class BalonZigZag extends Balon {
     private final float MIN_VELOCIDAD_LATERAL = 200f;
     private final float MAX_VELOCIDAD_LATERAL = 500f;
 
-    private float tiempoInicio;
-    private float direccionLateral;
     private float tiempoDesdeUltimoCambio;
     private float tiempoProximoCambio;
+    private float direccionLateral;
     private float velocidadLateralActual;
-    private final float MARGEN_LATERAL = 100f;
-    private final float ANCHO_PANTALLA = 800f;
+
+    private final float MARGEN = 100f;
+    private final float ANCHO = 800f;
 
     public BalonZigZag(Texture textura, float velocidad) {
         super(textura, 6, velocidad, new EstrategiaColisionNormal());
-        this.tiempoInicio = TimeUtils.nanoTime();
-        this.tiempoDesdeUltimoCambio = 0f;
-        this.direccionLateral = MathUtils.randomBoolean() ? 1f : -1f;
-        reiniciarTemporizador();
+        direccionLateral = MathUtils.randomBoolean() ? 1 : -1;
+        reiniciar();
     }
 
-    private void reiniciarTemporizador() {
+    private void reiniciar() {
         tiempoProximoCambio = MathUtils.random(MIN_TIEMPO_ZIG, MAX_TIEMPO_ZAG);
         velocidadLateralActual = MathUtils.random(MIN_VELOCIDAD_LATERAL, MAX_VELOCIDAD_LATERAL);
+        tiempoDesdeUltimoCambio = 0;
     }
 
     @Override
@@ -37,36 +36,22 @@ public class BalonZigZag extends Balon {
         area.y -= velocidad * delta;
 
         tiempoDesdeUltimoCambio += delta;
-
         if (tiempoDesdeUltimoCambio >= tiempoProximoCambio) {
-            direccionLateral *= -1f;
-            cambiarDireccion();
+            direccionLateral *= -1;
+            reiniciar();
         }
 
         area.x += velocidadLateralActual * direccionLateral * delta;
 
-        boolean tocaIzq = area.x < MARGEN_LATERAL;
-        boolean tocaDer = area.x > ANCHO_PANTALLA - area.width - MARGEN_LATERAL;
-
-        if (tocaIzq || tocaDer) {
-            if (tocaIzq) {
-                area.x = MARGEN_LATERAL;
-                if (direccionLateral < 0f) {
-                    direccionLateral = 1f;
-                    cambiarDireccion();
-                }
-            } else {
-                area.x = ANCHO_PANTALLA - area.width - MARGEN_LATERAL;
-                if (direccionLateral > 0f) {
-                    direccionLateral = -1f;
-                    cambiarDireccion();
-                }
-            }
+        if (area.x < MARGEN) {
+            area.x = MARGEN;
+            direccionLateral = 1;
+            reiniciar();
         }
-    }
-
-    private void cambiarDireccion() {
-        tiempoDesdeUltimoCambio = 0f;
-        reiniciarTemporizador();
+        if (area.x > ANCHO - area.width - MARGEN) {
+            area.x = ANCHO - area.width - MARGEN;
+            direccionLateral = -1;
+            reiniciar();
+        }
     }
 }
